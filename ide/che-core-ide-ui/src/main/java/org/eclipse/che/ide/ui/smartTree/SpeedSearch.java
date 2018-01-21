@@ -10,26 +10,6 @@
  */
 package org.eclipse.che.ide.ui.smartTree;
 
-import com.google.common.base.Predicate;
-import com.google.gwt.dom.client.Style;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Label;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import org.eclipse.che.ide.DelayedTask;
-import org.eclipse.che.ide.FontAwesome;
-import org.eclipse.che.ide.ui.smartTree.converter.NodeConverter;
-import org.eclipse.che.ide.ui.smartTree.converter.impl.NodeNameConverter;
-import org.eclipse.che.ide.ui.smartTree.data.Node;
-import org.eclipse.che.ide.ui.smartTree.event.ExpandNodeEvent.ExpandNodeHandler;
-import org.eclipse.che.ide.ui.smartTree.event.RedrawNodeEvent;
-
 import static com.google.gwt.dom.client.Style.BorderStyle.SOLID;
 import static com.google.gwt.dom.client.Style.Position.FIXED;
 import static com.google.gwt.dom.client.Style.Unit.PX;
@@ -38,6 +18,22 @@ import static com.google.gwt.event.dom.client.KeyCodes.KEY_ENTER;
 import static com.google.gwt.event.dom.client.KeyCodes.KEY_ESCAPE;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.che.ide.api.theme.Style.theme;
+
+import com.google.common.base.Predicate;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import org.eclipse.che.ide.DelayedTask;
+import org.eclipse.che.ide.FontAwesome;
+import org.eclipse.che.ide.ui.smartTree.converter.NodeConverter;
+import org.eclipse.che.ide.ui.smartTree.converter.impl.NodeNameConverter;
+import org.eclipse.che.ide.ui.smartTree.data.Node;
 
 /**
  * @author Vlad Zhukovskiy
@@ -53,9 +49,6 @@ class SpeedSearch {
   private final NodeConverter<Node, String> nodeConverter;
   private final SpeedSearchRender searchRender;
   private final boolean filterNodes;
-  private final ExpandNodeHandler expandNodeHandler;
-
-  private HandlerRegistration expandHandlerRegistration;
   private DelayedTask searchTask;
   private StringBuilder searchRequest;
   private SearchPopUp searchPopUp;
@@ -85,6 +78,7 @@ class SpeedSearch {
     this.searchRender = new SpeedSearchRender(tree.getTreeStyles(), matchingStyle);
     this.nodeConverter = nodeConverter != null ? nodeConverter : new NodeNameConverter();
     this.nodeStorage = tree.getNodeStorage();
+    this.savedNodes = new ArrayList<>();
     this.tree.setPresentationRenderer(searchRender);
     this.tree.addKeyPressHandler(
         event -> {
@@ -114,31 +108,36 @@ class SpeedSearch {
               break;
           }
         });
-    this.expandNodeHandler =
+    this.tree.addExpandHandler(
         event -> {
           Node expandedNode = event.getNode();
-          List<Node> expandedNodes =
-              filteredNodes
-                  .stream()
-                  .filter(node -> node.getParent() != null && node.getParent().equals(expandedNode))
-                  .collect(toList());
-          if (nodeStorage.getChildren(expandedNode).size() != expandedNodes.size()) {
-            nodeStorage.replaceChildren(expandedNode, expandedNodes);
-          }
-        };
-    this.tree.addRedrawHandler(
-        (RedrawNodeEvent event) -> {
           if (update) {
-            List<Node> children = nodeStorage.getChildren(event.getNode());
+            savedNodes = getVisibleNodes();
+            List<Node> children = nodeStorage.getChildren(expandedNode);
             if (children.stream().allMatch(Node::isLeaf)) {
-              savedNodes = new ArrayList<>();
-              savedNodes.addAll(getVisibleNodes());
-              savedNodes.addAll(children);
               update = false;
               doSearch();
             }
+          } else {
+            nodeStorage
+                .getChildren(expandedNode)
+                .forEach(
+                    childNode -> {
+                      if (!matchesToSearchRequest().apply(childNode)) {
+                        if (childNode.isLeaf()) {
+                          nodeStorage.remove(childNode);
+                        } else if (nodeStorage
+                            .getChildren(childNode)
+                            .stream()
+                            .noneMatch(matchesToSearchRequest()::apply)) {
+                          nodeStorage.remove(childNode);
+                        }
+                      }
+                    });
+            if (filteredNodes != null) {
+              setSelection();
+            }
           }
-          setSelection();
         });
 
     initSearchPopUp();
@@ -223,11 +222,6 @@ class SpeedSearch {
 
   void resetState() {
     update = true;
-    savedNodes = null;
-    if (expandHandlerRegistration != null) {
-      expandHandlerRegistration.removeHandler();
-      expandHandlerRegistration = null;
-    }
   }
 
   void closePopUp() {
@@ -238,13 +232,8 @@ class SpeedSearch {
   }
 
   private void doSearch() {
-    if (expandHandlerRegistration == null) {
-      expandHandlerRegistration = tree.addExpandHandler(expandNodeHandler);
-    }
     if (searchRequest.toString().isEmpty()) {
       removeSearchPopUpFromTreeIfIsShown();
-      expandHandlerRegistration.removeHandler();
-      expandHandlerRegistration = null;
     } else {
       addSearchPopUpToTreeIfNotDisplayed();
       searchPopUp.setSearchRequest(searchRequest.toString());

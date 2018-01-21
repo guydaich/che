@@ -992,9 +992,7 @@ public class Tree extends FocusWidget
     speedSearch = new SpeedSearch(this, treeStyles.styles().searchMatch(), null, filterElements);
   }
 
-  /**
-   * Resets ini
-   */
+  /** Resets ini */
   public void resetSpeedSearchState() {
     speedSearch.resetState();
   }
