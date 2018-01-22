@@ -20,7 +20,6 @@ import org.eclipse.che.multiuser.resource.api.free.FreeResourcesLimitService;
 import org.eclipse.che.multiuser.resource.api.free.FreeResourcesProvider;
 import org.eclipse.che.multiuser.resource.api.license.AccountLicenseService;
 import org.eclipse.che.multiuser.resource.api.license.LicenseServicePermissionsFilter;
-import org.eclipse.che.multiuser.resource.api.license.ResourcesProvider;
 import org.eclipse.che.multiuser.resource.api.type.RamResourceType;
 import org.eclipse.che.multiuser.resource.api.type.ResourceType;
 import org.eclipse.che.multiuser.resource.api.type.RuntimeResourceType;

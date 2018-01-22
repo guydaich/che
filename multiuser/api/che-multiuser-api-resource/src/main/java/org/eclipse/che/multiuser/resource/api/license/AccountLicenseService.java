@@ -35,25 +35,6 @@ import org.eclipse.che.multiuser.resource.shared.dto.AccountLicenseDto;
 @Api(value = "license-account", description = "Account License REST API")
 @Path("/license/account")
 public class AccountLicenseService {
-  private AccountLicenseManager accountAccountLicenseManager;
 
-  @Inject
-  public AccountLicenseService(AccountLicenseManager accountAccountLicenseManager) {
-    this.accountAccountLicenseManager = accountAccountLicenseManager;
-  }
 
-  @GET
-  @Path("/{accountId}")
-  @Produces(APPLICATION_JSON)
-  @ApiOperation(value = "Get license for given account", response = AccountLicenseDto.class)
-  @ApiResponses({
-    @ApiResponse(code = 200, message = "The license successfully fetched"),
-    @ApiResponse(code = 404, message = "Account with specified id was not found"),
-    @ApiResponse(code = 500, message = "Internal server error occurred")
-  })
-  public AccountLicenseDto getLicense(
-      @ApiParam("Account id") @PathParam("accountId") String accountId)
-      throws NotFoundException, ServerException {
-    return asDto(accountAccountLicenseManager.getByAccount(accountId));
-  }
 }

@@ -21,6 +21,7 @@ import static org.testng.Assert.assertEquals;
 import com.google.common.collect.ImmutableMap;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.multiuser.resource.api.ResourceAggregator;
+import org.eclipse.che.multiuser.resource.api.ResourcesProvider;
 import org.eclipse.che.multiuser.resource.model.AccountLicense;
 import org.eclipse.che.multiuser.resource.spi.impl.ProvidedResourcesImpl;
 import org.eclipse.che.multiuser.resource.spi.impl.ResourceImpl;

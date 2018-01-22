@@ -11,6 +11,7 @@
 package org.eclipse.che.multiuser.resource.api.usage;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.eclipse.che.multiuser.resource.api.DtoConverter.asDto;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -29,6 +30,8 @@ import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.rest.Service;
 import org.eclipse.che.multiuser.resource.api.DtoConverter;
+import org.eclipse.che.multiuser.resource.api.license.AccountLicenseManager;
+import org.eclipse.che.multiuser.resource.shared.dto.AccountLicenseDto;
 import org.eclipse.che.multiuser.resource.shared.dto.ResourceDto;
 
 /**
@@ -39,11 +42,16 @@ import org.eclipse.che.multiuser.resource.shared.dto.ResourceDto;
 @Api(value = "/resource", description = "Resource REST API")
 @Path("/resource")
 public class ResourceUsageService extends Service {
+
   private final ResourceUsageManager resourceUsageManager;
+  private final AccountLicenseManager accountAccountLicenseManager;
 
   @Inject
-  public ResourceUsageService(ResourceUsageManager resourceUsageManager) {
+  public ResourceUsageService(
+      ResourceUsageManager resourceUsageManager,
+      AccountLicenseManager accountAccountLicenseManager) {
     this.resourceUsageManager = resourceUsageManager;
+    this.accountAccountLicenseManager = accountAccountLicenseManager;
   }
 
   @GET
@@ -111,5 +119,20 @@ public class ResourceUsageService extends Service {
         .stream()
         .map(DtoConverter::asDto)
         .collect(Collectors.toList());
+  }
+
+  @GET
+  @Path("description/{accountId}")
+  @Produces(APPLICATION_JSON)
+  @ApiOperation(value = "Get license for given account", response = AccountLicenseDto.class)
+  @ApiResponses({
+    @ApiResponse(code = 200, message = "The license successfully fetched"),
+    @ApiResponse(code = 404, message = "Account with specified id was not found"),
+    @ApiResponse(code = 500, message = "Internal server error occurred")
+  })
+  public AccountLicenseDto getLicense(
+      @ApiParam("Account id") @PathParam("accountId") String accountId)
+      throws NotFoundException, ServerException {
+    return asDto(accountAccountLicenseManager.getByAccount(accountId));
   }
 }
