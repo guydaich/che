@@ -79,6 +79,7 @@ class SpeedSearch {
     this.nodeConverter = nodeConverter != null ? nodeConverter : new NodeNameConverter();
     this.nodeStorage = tree.getNodeStorage();
     this.savedNodes = new ArrayList<>();
+    this.filteredNodes = new ArrayList<>();
     this.tree.setPresentationRenderer(searchRender);
     this.tree.addKeyPressHandler(
         event -> {
@@ -111,31 +112,29 @@ class SpeedSearch {
     this.tree.addExpandHandler(
         event -> {
           Node expandedNode = event.getNode();
+          List<Node> visibleChildren = nodeStorage.getChildren(expandedNode);
           if (update) {
-            savedNodes = getVisibleNodes();
-            List<Node> children = nodeStorage.getChildren(expandedNode);
-            if (children.stream().allMatch(Node::isLeaf)) {
+            savedNodes = new ArrayList<>(getVisibleNodes());
+            if (visibleChildren.stream().allMatch(Node::isLeaf)) {
               update = false;
               doSearch();
             }
           } else {
-            nodeStorage
-                .getChildren(expandedNode)
-                .forEach(
-                    childNode -> {
-                      if (!matchesToSearchRequest().apply(childNode)) {
-                        if (childNode.isLeaf()) {
-                          nodeStorage.remove(childNode);
-                        } else if (nodeStorage
-                            .getChildren(childNode)
-                            .stream()
-                            .noneMatch(matchesToSearchRequest()::apply)) {
-                          nodeStorage.remove(childNode);
-                        }
-                      }
-                    });
-            if (filteredNodes != null) {
-              setSelection();
+            List<Node> savedChildren =
+                savedNodes
+                    .stream()
+                    .filter(
+                        node -> node.getParent() != null && node.getParent().equals(expandedNode))
+                    .collect(toList());
+            if (savedChildren.size() == visibleChildren.size()) {
+              for (Node node : savedChildren) {
+                int i = savedNodes.indexOf(node);
+                savedNodes.remove(node);
+                savedNodes.add(i, visibleChildren.get(savedChildren.indexOf(node)));
+              }
+            }
+            if (visibleChildren.size() != getFilteredChildren(expandedNode).size()) {
+              doSearch();
             }
           }
         });
@@ -266,8 +265,8 @@ class SpeedSearch {
             nodeStorage.add(savedNode);
           } else if (getVisibleNodes().contains(parent)) {
             List<Node> filteredChildren = getFilteredChildren(parent);
-            if (nodeStorage.getChildren(parent).size() != filteredChildren.size()) {
-              nodeStorage.replaceChildren(parent, filteredChildren);
+            if (filteredChildren.contains(savedNode)) {
+              nodeStorage.insert(parent, filteredChildren.indexOf(savedNode), savedNode);
             }
           }
         }
