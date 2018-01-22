@@ -25,10 +25,12 @@ import java.util.HashSet;
 import org.eclipse.che.api.core.rest.ApiExceptionMapper;
 import org.eclipse.che.api.core.rest.CheJsonProvider;
 import org.eclipse.che.dto.server.DtoFactory;
-import org.eclipse.che.multiuser.resource.shared.dto.AccountLicenseDto;
+import org.eclipse.che.multiuser.resource.api.usage.ResourceUsageManager;
+import org.eclipse.che.multiuser.resource.api.usage.ResourceUsageService;
+import org.eclipse.che.multiuser.resource.shared.dto.ResourceDetailsDto;
 import org.eclipse.che.multiuser.resource.shared.dto.ProvidedResourcesDto;
 import org.eclipse.che.multiuser.resource.shared.dto.ResourceDto;
-import org.eclipse.che.multiuser.resource.spi.impl.AccountLicenseImpl;
+import org.eclipse.che.multiuser.resource.spi.impl.ResourceDetailsImpl;
 import org.everrest.assured.EverrestJetty;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -49,9 +51,9 @@ public class AccountLicenseServiceTest {
   @SuppressWarnings("unused") // is declared for deploying by everrest-assured
   private CheJsonProvider jsonProvider = new CheJsonProvider(new HashSet<>());
 
-  @Mock private AccountLicenseManager accountLicenseManager;
+  @Mock private ResourceUsageManager resourceUsageManager;
 
-  @InjectMocks private AccountLicenseService service;
+  @InjectMocks private ResourceUsageService service;
 
   @Test
   public void shouldGetLicense() throws Exception {
@@ -59,10 +61,10 @@ public class AccountLicenseServiceTest {
     final ResourceDto testResource =
         DtoFactory.newDto(ResourceDto.class).withType("test").withAmount(1234).withUnit("mb");
 
-    final AccountLicenseDto toFetch =
-        DtoFactory.newDto(AccountLicenseDto.class)
+    final ResourceDetailsDto toFetch =
+        DtoFactory.newDto(ResourceDetailsDto.class)
             .withAccountId("account123")
-            .withResourcesDetails(
+            .withProvidedResources(
                 singletonList(
                     DtoFactory.newDto(ProvidedResourcesDto.class)
                         .withId("resource123")
@@ -74,8 +76,8 @@ public class AccountLicenseServiceTest {
             .withTotalResources(singletonList(testResource));
 
     // when
-    when(accountLicenseManager.getByAccount(eq("account123")))
-        .thenReturn(new AccountLicenseImpl(toFetch));
+    when(resourceUsageManager.getByAccount(eq("account123")))
+        .thenReturn(new ResourceDetailsImpl(toFetch));
 
     // then
     final Response response =
@@ -88,10 +90,10 @@ public class AccountLicenseServiceTest {
             .statusCode(200)
             .get(SECURE_PATH + "/license/account/account123");
 
-    final AccountLicenseDto fetchedLicense =
+    final ResourceDetailsDto fetchedLicense =
         DtoFactory.getInstance()
-            .createDtoFromJson(response.body().print(), AccountLicenseDto.class);
+            .createDtoFromJson(response.body().print(), ResourceDetailsDto.class);
     assertEquals(fetchedLicense, toFetch);
-    verify(accountLicenseManager).getByAccount("account123");
+    verify(resourceUsageManager).getByAccount("account123");
   }
 }

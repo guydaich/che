@@ -45,6 +45,7 @@ public class ResourceUsageServicePermissionsFilter extends CheMethodInvokerFilte
   static final String GET_TOTAL_RESOURCES_METHOD = "getTotalResources";
   static final String GET_AVAILABLE_RESOURCES_METHOD = "getAvailableResources";
   static final String GET_USED_RESOURCES_METHOD = "getUsedResources";
+  static final String GET_LICENSE_METHOD = "getResourceDetails";
 
   private final AccountManager accountManager;
   private final Map<String, AccountPermissionsChecker> permissionsCheckers;
@@ -67,6 +68,7 @@ public class ResourceUsageServicePermissionsFilter extends CheMethodInvokerFilte
       case GET_TOTAL_RESOURCES_METHOD:
       case GET_AVAILABLE_RESOURCES_METHOD:
       case GET_USED_RESOURCES_METHOD:
+      case GET_LICENSE_METHOD:
         Subject currentSubject = EnvironmentContext.getCurrent().getSubject();
         if (currentSubject.hasPermission(
             SystemDomain.DOMAIN_ID, null, SystemDomain.MANAGE_SYSTEM_ACTION)) {

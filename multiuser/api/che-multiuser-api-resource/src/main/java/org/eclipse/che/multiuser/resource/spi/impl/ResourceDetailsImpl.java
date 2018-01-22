@@ -14,28 +14,28 @@ import com.google.common.base.Objects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.eclipse.che.multiuser.resource.model.AccountLicense;
+import org.eclipse.che.multiuser.resource.model.ResourceDetails;
 import org.eclipse.che.multiuser.resource.model.ProvidedResources;
 import org.eclipse.che.multiuser.resource.model.Resource;
 
 /** @author Sergii Leschenko */
-public class AccountLicenseImpl implements AccountLicense {
+public class ResourceDetailsImpl implements ResourceDetails {
   private String accountId;
-  private List<ProvidedResourcesImpl> resourcesDetails;
+  private List<ProvidedResourcesImpl> providedResources;
   private List<ResourceImpl> totalResources;
 
-  public AccountLicenseImpl(AccountLicense license) {
-    this(license.getAccountId(), license.getResourcesDetails(), license.getTotalResources());
+  public ResourceDetailsImpl(ResourceDetails license) {
+    this(license.getAccountId(), license.getProvidedResources(), license.getTotalResources());
   }
 
-  public AccountLicenseImpl(
+  public ResourceDetailsImpl(
       String owner,
-      List<? extends ProvidedResources> resourcesDetails,
+      List<? extends ProvidedResources> providedResources,
       List<? extends Resource> totalResources) {
     this.accountId = owner;
-    if (resourcesDetails != null) {
-      this.resourcesDetails =
-          resourcesDetails.stream().map(ProvidedResourcesImpl::new).collect(Collectors.toList());
+    if (providedResources != null) {
+      this.providedResources =
+          providedResources.stream().map(ProvidedResourcesImpl::new).collect(Collectors.toList());
     }
     if (totalResources != null) {
       this.totalResources =
@@ -49,11 +49,11 @@ public class AccountLicenseImpl implements AccountLicense {
   }
 
   @Override
-  public List<ProvidedResourcesImpl> getResourcesDetails() {
-    if (resourcesDetails == null) {
-      resourcesDetails = new ArrayList<>();
+  public List<ProvidedResourcesImpl> getProvidedResources() {
+    if (providedResources == null) {
+      providedResources = new ArrayList<>();
     }
-    return resourcesDetails;
+    return providedResources;
   }
 
   @Override
@@ -67,26 +67,26 @@ public class AccountLicenseImpl implements AccountLicense {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof AccountLicenseImpl)) return false;
-    AccountLicenseImpl license = (AccountLicenseImpl) o;
+    if (!(o instanceof ResourceDetailsImpl)) return false;
+    ResourceDetailsImpl license = (ResourceDetailsImpl) o;
     return Objects.equal(accountId, license.accountId)
-        && Objects.equal(resourcesDetails, license.resourcesDetails)
+        && Objects.equal(providedResources, license.providedResources)
         && Objects.equal(totalResources, license.totalResources);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(accountId, resourcesDetails, totalResources);
+    return Objects.hashCode(accountId, providedResources, totalResources);
   }
 
   @Override
   public String toString() {
-    return "AccountLicenseImpl{"
+    return "ResourceDetailsImpl{"
         + "accountId='"
         + accountId
         + '\''
-        + ", resourcesDetails="
-        + resourcesDetails
+        + ", providedResources="
+        + providedResources
         + ", totalResources="
         + totalResources
         + '}';

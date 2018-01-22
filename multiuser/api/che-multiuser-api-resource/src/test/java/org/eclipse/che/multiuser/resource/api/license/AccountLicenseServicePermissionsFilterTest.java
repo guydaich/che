@@ -36,6 +36,7 @@ import org.eclipse.che.commons.env.EnvironmentContext;
 import org.eclipse.che.commons.subject.Subject;
 import org.eclipse.che.multiuser.api.permission.server.account.AccountOperation;
 import org.eclipse.che.multiuser.api.permission.server.account.AccountPermissionsChecker;
+import org.eclipse.che.multiuser.resource.api.usage.ResourceUsageService;
 import org.everrest.assured.EverrestJetty;
 import org.everrest.core.Filter;
 import org.everrest.core.GenericContainerRequest;
@@ -47,7 +48,11 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
+
+
 /**
+ * TODO!!
+ *
  * Tests for {@link org.eclipse.che.multiuser.resource.api.license.LicenseServicePermissionsFilter}
  *
  * @author Sergii Leschenko
@@ -64,13 +69,13 @@ public class AccountLicenseServicePermissionsFilterTest {
 
   @Mock private Account account;
 
-  @Mock private AccountLicenseService service;
+  @Mock private ResourceUsageService service;
 
   @Mock private static Subject subject;
 
   @Mock private AccountPermissionsChecker checker;
 
-  private LicenseServicePermissionsFilter filter;
+  private  ResourceUsageServicePermissionsFilter filter;
 
   @BeforeMethod
   public void setUp() throws Exception {
@@ -79,14 +84,14 @@ public class AccountLicenseServicePermissionsFilterTest {
     when(account.getType()).thenReturn("test");
     when(checker.getAccountType()).thenReturn("test");
 
-    filter = new LicenseServicePermissionsFilter(accountManager, ImmutableSet.of(checker));
+    filter = new ResourceUsageServicePermissionsFilter(accountManager, ImmutableSet.of(checker));
   }
 
   @Test
   public void shouldTestThatAllPublicMethodsAreCoveredByPermissionsFilter() throws Exception {
     // given
     final List<String> collect =
-        Stream.of(AccountLicenseService.class.getDeclaredMethods())
+        Stream.of(ResourceUsageService.class.getDeclaredMethods())
             .filter(method -> Modifier.isPublic(method.getModifiers()))
             .map(Method::getName)
             .collect(Collectors.toList());
@@ -107,7 +112,7 @@ public class AccountLicenseServicePermissionsFilterTest {
         .get(SECURE_PATH + "/license/account/account123");
 
     verify(checker).checkPermissions("account123", AccountOperation.SEE_RESOURCE_INFORMATION);
-    verify(service).getLicense("account123");
+    verify(service).getResourceDetails("account123");
   }
 
   @Test(dataProvider = "coveredPaths")

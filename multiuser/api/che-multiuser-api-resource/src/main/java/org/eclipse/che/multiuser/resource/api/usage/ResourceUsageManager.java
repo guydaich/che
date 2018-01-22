@@ -27,10 +27,10 @@ import org.eclipse.che.multiuser.resource.api.ResourceAggregator;
 import org.eclipse.che.multiuser.resource.api.ResourceUsageTracker;
 import org.eclipse.che.multiuser.resource.api.ResourcesProvider;
 import org.eclipse.che.multiuser.resource.api.exception.NoEnoughResourcesException;
-import org.eclipse.che.multiuser.resource.model.AccountLicense;
+import org.eclipse.che.multiuser.resource.model.ResourceDetails;
 import org.eclipse.che.multiuser.resource.model.ProvidedResources;
 import org.eclipse.che.multiuser.resource.model.Resource;
-import org.eclipse.che.multiuser.resource.spi.impl.AccountLicenseImpl;
+import org.eclipse.che.multiuser.resource.spi.impl.ResourceDetailsImpl;
 
 /**
  * Facade for resources using related operations.
@@ -138,7 +138,7 @@ public class ResourceUsageManager {
    * @throws NotFoundException when account with specified id was not found
    * @throws ServerException when some exception occurs
    */
-  public AccountLicense getByAccount(String accountId) throws NotFoundException, ServerException {
+  public ResourceDetails getByAccount(String accountId) throws NotFoundException, ServerException {
     final List<ProvidedResources> resources = new ArrayList<>();
     for (ResourcesProvider resourcesProvider : resourcesProviders) {
       resources.addAll(resourcesProvider.getResources(accountId));
@@ -150,7 +150,7 @@ public class ResourceUsageManager {
             .flatMap(providedResources -> providedResources.getResources().stream())
             .collect(Collectors.toList());
 
-    return new AccountLicenseImpl(
+    return new ResourceDetailsImpl(
         accountId,
         resources,
         new ArrayList<>(resourceAggregator.aggregateByType(allResources).values()));

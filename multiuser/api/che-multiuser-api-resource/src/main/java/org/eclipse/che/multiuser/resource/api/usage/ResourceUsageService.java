@@ -30,8 +30,7 @@ import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.rest.Service;
 import org.eclipse.che.multiuser.resource.api.DtoConverter;
-import org.eclipse.che.multiuser.resource.api.license.AccountLicenseManager;
-import org.eclipse.che.multiuser.resource.shared.dto.AccountLicenseDto;
+import org.eclipse.che.multiuser.resource.shared.dto.ResourceDetailsDto;
 import org.eclipse.che.multiuser.resource.shared.dto.ResourceDto;
 
 /**
@@ -44,14 +43,11 @@ import org.eclipse.che.multiuser.resource.shared.dto.ResourceDto;
 public class ResourceUsageService extends Service {
 
   private final ResourceUsageManager resourceUsageManager;
-  private final AccountLicenseManager accountAccountLicenseManager;
 
   @Inject
   public ResourceUsageService(
-      ResourceUsageManager resourceUsageManager,
-      AccountLicenseManager accountAccountLicenseManager) {
+      ResourceUsageManager resourceUsageManager) {
     this.resourceUsageManager = resourceUsageManager;
-    this.accountAccountLicenseManager = accountAccountLicenseManager;
   }
 
   @GET
@@ -124,15 +120,15 @@ public class ResourceUsageService extends Service {
   @GET
   @Path("description/{accountId}")
   @Produces(APPLICATION_JSON)
-  @ApiOperation(value = "Get license for given account", response = AccountLicenseDto.class)
+  @ApiOperation(value = "Get license for given account", response = ResourceDetailsDto.class)
   @ApiResponses({
     @ApiResponse(code = 200, message = "The license successfully fetched"),
     @ApiResponse(code = 404, message = "Account with specified id was not found"),
     @ApiResponse(code = 500, message = "Internal server error occurred")
   })
-  public AccountLicenseDto getLicense(
+  public ResourceDetailsDto getResourceDetails(
       @ApiParam("Account id") @PathParam("accountId") String accountId)
       throws NotFoundException, ServerException {
-    return asDto(accountAccountLicenseManager.getByAccount(accountId));
+    return asDto(resourceUsageManager.getByAccount(accountId));
   }
 }

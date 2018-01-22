@@ -22,7 +22,8 @@ import com.google.common.collect.ImmutableMap;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.multiuser.resource.api.ResourceAggregator;
 import org.eclipse.che.multiuser.resource.api.ResourcesProvider;
-import org.eclipse.che.multiuser.resource.model.AccountLicense;
+import org.eclipse.che.multiuser.resource.api.usage.ResourceUsageManager;
+import org.eclipse.che.multiuser.resource.model.ResourceDetails;
 import org.eclipse.che.multiuser.resource.spi.impl.ProvidedResourcesImpl;
 import org.eclipse.che.multiuser.resource.spi.impl.ResourceImpl;
 import org.mockito.Mock;
@@ -32,7 +33,6 @@ import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 /**
- * Tests for {@link org.eclipse.che.multiuser.resource.api.license.AccountLicenseManager}
  *
  * @author Sergii Leschenko
  */
@@ -41,12 +41,12 @@ public class AccountLicenseManagerTest {
   @Mock private ResourcesProvider resourcesProvider;
   @Mock private ResourceAggregator resourceAggregator;
 
-  private AccountLicenseManager accountLicenseManager;
+  private ResourceUsageManager resourceUsageManager;
 
   @BeforeMethod
   public void setUp() {
-    accountLicenseManager =
-        new AccountLicenseManager(singleton(resourcesProvider), resourceAggregator);
+    resourceUsageManager = null;
+//        new ResourceUsageManager(singleton(resourcesProvider), resourceAggregator);
   }
 
   @Test(
@@ -57,7 +57,7 @@ public class AccountLicenseManagerTest {
     when(resourcesProvider.getResources(eq("account123")))
         .thenThrow(new NotFoundException("Account with specified id was not found"));
 
-    accountLicenseManager.getByAccount("account123");
+    resourceUsageManager.getByAccount("account123");
   }
 
   @Test
@@ -73,14 +73,14 @@ public class AccountLicenseManagerTest {
     when(resourceAggregator.aggregateByType(any()))
         .thenReturn(ImmutableMap.of(reducedResource.getType(), reducedResource));
 
-    final AccountLicense license = accountLicenseManager.getByAccount("account123");
+    final ResourceDetails license = resourceUsageManager.getByAccount("account123");
 
     verify(resourcesProvider).getResources(eq("account123"));
     verify(resourceAggregator).aggregateByType(eq(singletonList(testResource)));
 
     assertEquals(license.getAccountId(), "account123");
-    assertEquals(license.getResourcesDetails().size(), 1);
-    assertEquals(license.getResourcesDetails().get(0), providedResource);
+    assertEquals(license.getProvidedResources().size(), 1);
+    assertEquals(license.getProvidedResources().get(0), providedResource);
 
     assertEquals(license.getTotalResources().size(), 1);
     assertEquals(license.getTotalResources().get(0), reducedResource);
